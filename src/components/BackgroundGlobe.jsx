@@ -342,12 +342,12 @@ export default function BackgroundGlobe() {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-90"
+      className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-40 blur-[1px] brightness-75"
       style={{
         maskImage:
-          'radial-gradient(ellipse at center, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 90%)',
+          'radial-gradient(ellipse at center, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 80%)',
         WebkitMaskImage:
-          'radial-gradient(ellipse at center, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 90%)',
+          'radial-gradient(ellipse at center, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 80%)',
       }}
     />
   );

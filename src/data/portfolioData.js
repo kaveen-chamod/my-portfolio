@@ -18,7 +18,7 @@ export const personalInfo = {
 };
 
 export const aboutData = {
-  photo: "/src/assets/about-profile.jpg",
+  photo: "/about-profile.jpg",
   detailedBio: "I am an undergraduate student pursuing a Bachelor of Information and Communication Technology Honours degree at the Faculty of Technology, University of Colombo. With a strong foundation spanning modern full-stack development, computer networking, and UI/UX design, I build end-to-end digital solutions that are robust, visually refined, and technically sound.",
   stats: [
     {
@@ -136,7 +136,7 @@ export const projectsData = [
       "Persistent cart storage with automated tax & shipping calculations",
       "Responsive admin dashboard for inventory, order status & revenue tracking"
     ],
-    image: "/src/assets/project-ecommerce.png",
+    image: "/project-ecommerce.png",
     github: "https://github.com/kaveen-chamod",
     demo: "https://computershopfrontend1.vercel.app/",
     featured: true
@@ -153,7 +153,7 @@ export const projectsData = [
       "Priority tag badges and deadline reminder scheduling",
       "Sleek dark-mode interface built with Material Design 3 guidelines"
     ],
-    image: "/src/assets/project-taskflow.png",
+    image: "/project-taskflow.png",
     github: "https://github.com/kaveen-chamod/TaskFlow-.git",
     demo: "https://www.figma.com/design/u9Ii0rA6BlqpxXEei9oyC1/to-do?node-id=0-1&t=aHn6R11eBLEAX6GV-1",
     featured: true
@@ -170,7 +170,7 @@ export const projectsData = [
       "Centralized DHCP server pools with IP range security reservations",
       "Hardened Cisco IOS switches & routers with SSH access and Port Security"
     ],
-    image: "/src/assets/project-network.png",
+    image: "/project-network.png",
     github: "https://github.com/kaveen-chamod",
     demo: "#",
     featured: true
@@ -194,7 +194,7 @@ export const projectsData = [
       "Subnetted Inter-VLAN Routing: Configured sub-interfaces with 802.1Q encapsulation to maintain secure traffic separation between guest/staff networks.",
       "Hybrid Access Architecture: Integrated standalone Wireless Access Points (WAPs) per floor serving laptops, tablets, and mobile devices alongside fixed LAN workstations and printers."
     ],
-    image: "/src/assets/project-hotel-network.png",
+    image: "/project-hotel-network.png",
     github: "https://github.com/kaveen-chamod",
     demo: "#",
     featured: true

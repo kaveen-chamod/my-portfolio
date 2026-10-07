@@ -1,21 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaGithub, FaLinkedin, FaEnvelope, FaFileDownload, FaArrowRight, FaCode, FaReact, FaTerminal, FaJsSquare, FaNetworkWired } from 'react-icons/fa';
+import { FaGithub, FaLinkedin, FaEnvelope, FaFileDownload, FaArrowRight, FaCode, FaReact, FaTerminal, FaNetworkWired } from 'react-icons/fa';
+import heroAvatar from '../assets/hero-avatar.png';
 import { personalInfo } from '../data/portfolioData';
 
 export default function Hero() {
+  const [avatarFailed, setAvatarFailed] = useState(false);
   const floatingBadges = [
-    { icon: <FaCode className="text-blue-400" />, label: 'Full-Stack', pos: 'top-4 -left-6', delay: 0 },
-    { icon: <FaReact className="text-cyan-400" />, label: 'React.js', pos: 'top-20 -right-6', delay: 1.5 },
-    { icon: <FaTerminal className="text-emerald-400" />, label: 'DevOps / Linux', pos: 'bottom-20 -left-8', delay: 3 },
-    { icon: <FaNetworkWired className="text-indigo-400" />, label: 'Cisco / Cloud', pos: 'bottom-4 -right-4', delay: 4.5 },
+    { icon: <FaCode className="text-blue-400" />, label: 'Full-Stack', pos: 'top-4 left-2 sm:-left-6', delay: 0 },
+    { icon: <FaReact className="text-cyan-400" />, label: 'React.js', pos: 'top-20 right-2 sm:-right-6', delay: 1.5 },
+    { icon: <FaTerminal className="text-emerald-400" />, label: 'DevOps / Linux', pos: 'bottom-20 left-2 sm:-left-8', delay: 3 },
+    { icon: <FaNetworkWired className="text-indigo-400" />, label: 'Cisco / Cloud', pos: 'bottom-4 right-2 sm:-right-4', delay: 4.5 },
   ];
 
   return (
     <section id="hero" className="relative min-h-screen pt-28 pb-16 flex items-center justify-center overflow-hidden bg-transparent">
       {/* Glow Effects */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse-slow" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse-slow" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
@@ -128,32 +130,31 @@ export default function Hero() {
             <div className="relative w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-96">
               
               {/* Outer Decorative Ring */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-blue-600/30 to-cyan-500/30 blur-2xl -z-10 animate-pulse-slow" />
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-blue-600/30 to-cyan-500/30 blur-2xl -z-10 animate-pulse" />
               
               {/* Avatar Box */}
               <div className="w-full h-full rounded-3xl bg-slate-900/90 border border-slate-800 p-4 shadow-2xl relative overflow-hidden group">
                 <div className="w-full h-full rounded-2xl overflow-hidden bg-slate-950 relative border border-slate-800/80">
-                  <img
-                    src="/src/assets/hero-avatar.png"
-                    alt="Kaveen Chamod Avatar"
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                    onError={(e) => {
-                      // Fallback styled avatar representation
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                  {/* Fallback Graphic */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-slate-900 to-slate-950 text-center space-y-4">
-                    <div className="w-20 h-20 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 text-3xl font-mono font-bold shadow-lg shadow-blue-500/20">
-                      &lt;KC /&gt;
+                  {avatarFailed ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-slate-900 to-slate-950 text-center space-y-4">
+                      <div className="w-20 h-20 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 text-3xl font-mono font-bold shadow-lg shadow-blue-500/20">
+                        &lt;KC /&gt;
+                      </div>
+                      <span className="text-sm font-semibold text-slate-300">
+                        Full-Stack &amp; Network Engineer
+                      </span>
+                      <span className="text-xs font-mono text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
+                        Sri Lanka
+                      </span>
                     </div>
-                    <span className="text-sm font-semibold text-slate-300">
-                      Full-Stack &amp; Network Engineer
-                    </span>
-                    <span className="text-xs font-mono text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
-                      Sri Lanka
-                    </span>
-                  </div>
+                  ) : (
+                    <img
+                      src={heroAvatar}
+                      alt="Kaveen Chamod Avatar"
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                      onError={() => setAvatarFailed(true)}
+                    />
+                  )}
                 </div>
               </div>
 

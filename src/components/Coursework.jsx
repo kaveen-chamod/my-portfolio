@@ -59,12 +59,12 @@ export default function Coursework() {
 
         {/* Status Filter Tabs */}
         <div className="flex justify-center mb-10">
-          <div className="inline-flex p-1.5 bg-slate-100 rounded-2xl border border-slate-200 space-x-1">
+          <div className="grid grid-cols-2 gap-1.5 p-1.5 bg-slate-100 rounded-2xl border border-slate-200 sm:flex">
             {['All', 'Completed', 'In Progress', 'Planned'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setFilter(tab)}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                className={`min-h-11 min-w-11 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                   filter === tab
                     ? 'bg-white text-blue-600 shadow-sm border border-slate-200'
                     : 'text-slate-600 hover:text-slate-900'

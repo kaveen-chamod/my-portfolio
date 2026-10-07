@@ -247,6 +247,9 @@ export default function BackgroundGlobe() {
       targetScroll = window.scrollY || window.pageYOffset;
     };
 
+    let animationFrameId = null;
+    let contextLost = false;
+
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     const handleResize = () => {
@@ -256,6 +259,35 @@ export default function BackgroundGlobe() {
     };
     window.addEventListener('resize', handleResize);
 
+    const handleContextLost = (event) => {
+      event.preventDefault();
+      contextLost = true;
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    };
+
+    const handleContextRestored = () => {
+      contextLost = false;
+      startAnimation();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        if (animationFrameId !== null) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
+      } else {
+        startAnimation();
+      }
+    };
+
+    renderer.domElement.addEventListener('webglcontextlost', handleContextLost);
+    renderer.domElement.addEventListener('webglcontextrestored', handleContextRestored);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     // 8. Animation Loop
     const clock = new THREE.Clock();
     let idleRotation = -1.4; // Initial angle focused on Sri Lanka
@@ -263,7 +295,9 @@ export default function BackgroundGlobe() {
     let pulseGrowing = true;
 
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationFrameId = null;
+      if (contextLost || document.visibilityState === 'hidden') return;
+      animationFrameId = requestAnimationFrame(animate);
       const elapsedTime = clock.getElapsedTime();
 
       // [1] සෙමින් අඛණ්ඩව කැරකැවීම (Idle Auto-rotation)
@@ -327,13 +361,40 @@ export default function BackgroundGlobe() {
       renderer.render(scene, camera);
     };
 
-    animate();
+    function startAnimation() {
+      if (
+        animationFrameId === null &&
+        !contextLost &&
+        document.visibilityState !== 'hidden'
+      ) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    }
+
+    startAnimation();
 
     return () => {
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+      }
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      renderer.domElement.removeEventListener('webglcontextlost', handleContextLost);
+      renderer.domElement.removeEventListener('webglcontextrestored', handleContextRestored);
+      scene.traverse((object) => {
+        if (object.geometry) object.geometry.dispose();
+        if (object.material) {
+          const materials = Array.isArray(object.material)
+            ? object.material
+            : [object.material];
+          materials.forEach((material) => material.dispose());
+        }
+      });
       if (container && renderer.domElement) {
-        container.removeChild(renderer.domElement);
+        if (container.contains(renderer.domElement)) {
+          container.removeChild(renderer.domElement);
+        }
       }
       renderer.dispose();
     };

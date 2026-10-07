@@ -1,25 +1,67 @@
 import React, { useState } from 'react';
-import { FaGithub, FaLinkedin, FaEnvelope, FaMapMarkerAlt, FaPaperPlane, FaCheck, FaCopy, FaHeart } from 'react-icons/fa';
+import { FaEnvelope, FaMapMarkerAlt, FaPaperPlane, FaCheck, FaCopy, FaHeart } from 'react-icons/fa';
 import { personalInfo } from '../data/portfolioData';
 
 export default function Footer() {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState('');
   const [formSent, setFormSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
   const [formState, setFormState] = useState({ name: '', email: '', message: '' });
 
-  const handleCopyEmail = () => {
-    navigator.clipboard.writeText(personalInfo.email);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
+  const handleCopyEmail = async () => {
+    setCopyError('');
+
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error('Clipboard access is unavailable');
+      }
+      await navigator.clipboard.writeText(personalInfo.email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch {
+      setCopied(false);
+      setCopyError('Could not copy email. Please copy it manually.');
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setFormSent(true);
-    setTimeout(() => {
-      setFormSent(false);
+    setFormError('');
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          // Replace this placeholder with the access key created in the Web3Forms dashboard.
+          access_key: '1b07190f-96ae-4df2-8fac-f20299343f5b',
+          subject: `Portfolio contact form message from ${formState.name}`,
+          from_name: formState.name,
+          email: formState.email,
+          message: formState.message,
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Message could not be sent. Please try again.');
+      }
+
+      setFormSent(true);
       setFormState({ name: '', email: '', message: '' });
-    }, 4000);
+      setTimeout(() => setFormSent(false), 4000);
+    } catch (error) {
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : 'Message could not be sent. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -59,13 +101,17 @@ export default function Footer() {
               </div>
 
               <button
+                type="button"
                 onClick={handleCopyEmail}
-                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs flex items-center justify-center space-x-2 transition-all shadow-md shadow-blue-600/20"
+                className="min-h-11 w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs flex items-center justify-center space-x-2 transition-all shadow-md shadow-blue-600/20"
               >
                 {copied ? <FaCheck className="w-3.5 h-3.5" /> : <FaCopy className="w-3.5 h-3.5" />}
                 <span>{copied ? 'Copied!' : 'Copy Email'}</span>
               </button>
             </div>
+            <p aria-live="polite" className="text-xs text-red-400">
+              {copyError}
+            </p>
 
             {/* Location & Status */}
             <div className="flex items-center space-x-2 text-sm text-slate-400">
@@ -81,18 +127,19 @@ export default function Footer() {
             </h3>
 
             {formSent ? (
-              <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-2">
+              <div role="status" className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-2">
                 <FaCheck className="w-8 h-8 text-emerald-400 mx-auto" />
                 <h4 className="text-lg font-bold text-white">Thank You!</h4>
                 <p className="text-xs text-slate-300">
-                  Your message has been received. Kaveen will get back to you shortly!
+                  Your message was sent successfully. Kaveen will get back to you shortly!
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" aria-busy={isSubmitting}>
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 mb-1">Your Name</label>
+                  <label htmlFor="contact-name" className="block text-xs font-mono text-slate-400 mb-1">Your Name</label>
                   <input
+                    id="contact-name"
                     type="text"
                     required
                     value={formState.name}
@@ -103,8 +150,9 @@ export default function Footer() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 mb-1">Email Address</label>
+                  <label htmlFor="contact-email" className="block text-xs font-mono text-slate-400 mb-1">Email Address</label>
                   <input
+                    id="contact-email"
                     type="email"
                     required
                     value={formState.email}
@@ -115,8 +163,9 @@ export default function Footer() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-mono text-slate-400 mb-1">Message</label>
+                  <label htmlFor="contact-message" className="block text-xs font-mono text-slate-400 mb-1">Message</label>
                   <textarea
+                    id="contact-message"
                     rows={4}
                     required
                     value={formState.message}
@@ -126,12 +175,19 @@ export default function Footer() {
                   />
                 </div>
 
+                {formError && (
+                  <p role="alert" className="text-sm text-red-400">
+                    {formError}
+                  </p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm flex items-center justify-center space-x-2 transition-all shadow-lg shadow-blue-600/30"
+                  disabled={isSubmitting}
+                  className="min-h-11 w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:cursor-wait disabled:opacity-70 text-white font-bold text-sm flex items-center justify-center space-x-2 transition-all shadow-lg shadow-blue-600/30"
                 >
                   <FaPaperPlane className="w-3.5 h-3.5" />
-                  <span>Send Message</span>
+                  <span>{isSubmitting ? 'Sending…' : 'Send Message'}</span>
                 </button>
               </form>
             )}

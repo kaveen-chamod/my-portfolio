@@ -1,0 +1,268 @@
+PORTFOLIO CODE AUDIT — BUG LIST
+Read-only audit findings
+
+1. Hero — Avatar image is hidden or missing in production
+Severity: Medium
+Category: UI-UX
+Location: src/components/Hero.jsx, approx. lines 137–146
+Observed behavior: The hero photo can 404 in a production build, and the fallback graphic is layered over the image even when the image loads.
+Root cause: The image uses the literal source-tree URL "/src/assets/hero-avatar.png" instead of a Vite-managed asset import. The opaque, absolutely positioned fallback is always rendered after the image.
+Recommended fix: Import the image from ../assets/hero-avatar.png and render the fallback only when image loading fails. For example:
+
+  import heroAvatar from '../assets/hero-avatar.png';
+  const [avatarFailed, setAvatarFailed] = useState(false);
+
+  {avatarFailed ? (
+    <AvatarFallback />
+  ) : (
+    <img
+      src={heroAvatar}
+      alt="Kaveen Chamod"
+      className="h-full w-full object-cover"
+      onError={() => setAvatarFailed(true)}
+    />
+  )}
+
+Add useState to the React import and replace AvatarFallback with the existing fallback markup.
+
+2. Hero — Floating badges are clipped on narrow screens
+Severity: Medium
+Category: Mobile Responsiveness
+Location: src/components/Hero.jsx, approx. lines 15 and 161–177
+Observed behavior: At narrow viewport widths, badges positioned outside the avatar card can be cut off at the viewport edges.
+Root cause: Badge positions use negative horizontal offsets while the hero section has overflow-hidden.
+Recommended fix: Keep badges inside the card on mobile and apply outward offsets only at wider breakpoints. Example positions:
+
+  top-4 left-2 sm:-left-6
+  top-20 right-2 sm:-right-6
+  bottom-20 left-2 sm:-left-8
+  bottom-4 right-2 sm:-right-4
+
+3. Hero — Slow-pulse animation utility is undefined
+Severity: Low
+Category: UI-UX
+Location: src/components/Hero.jsx, approx. lines 17–18 and 131
+Observed behavior: The glow and ring elements using animate-pulse-slow do not get the intended animation.
+Root cause: The class is used in JSX but is not defined in the project CSS or Tailwind theme.
+Recommended fix: Replace animate-pulse-slow with a built-in utility such as animate-pulse, or define the custom animation in the Tailwind theme.
+
+4. Coursework — Filter tabs can overflow on very narrow phones
+Severity: Medium
+Category: Mobile Responsiveness
+Location: src/components/Coursework.jsx, approx. lines 64–80
+Observed behavior: The four status tabs can exceed the available width around 320px viewports; global horizontal overflow hiding can then clip them.
+Root cause: The tab group is a single non-wrapping inline-flex row with horizontal padding on every button.
+Recommended fix: Use a two-column layout on small screens and a row at larger widths:
+
+  <div className="grid w-full max-w-md grid-cols-2 gap-1.5 sm:flex sm:w-auto sm:max-w-none">
+
+Also add min-h-11 to each button to preserve an adequate touch height.
+
+5. Multiple components — Interactive targets are undersized for touch
+Severity: Medium
+Category: Mobile Responsiveness
+Location: src/components/TechStack.jsx, approx. lines 83–91; src/components/Coursework.jsx, approx. lines 64–80; src/components/Projects.jsx, approx. lines 116–130 and 171–176
+Observed behavior: Several filter buttons and project icon/close controls have hit areas below the commonly recommended 44px minimum.
+Root cause: Filter buttons use py-2 with small text, and icon actions use p-2 around small icons.
+Recommended fix: Give controls a minimum 44px hit area while leaving icons small. Example:
+
+  className="inline-flex min-h-11 min-w-11 items-center justify-center ..."
+
+Apply min-h-11 to filter buttons and the project-card icon links and close button.
+
+6. Navbar — Mobile menu state is not exposed accessibly
+Severity: Low
+Category: UI-UX
+Location: src/components/Navbar.jsx, approx. lines 137–163
+Observed behavior: The menu opens and its links close it when selected, but assistive technology is not told whether it is expanded or which element the button controls.
+Root cause: The toggle button has an aria-label, but no aria-expanded or aria-controls.
+Recommended fix: Add aria-expanded={mobileMenuOpen} and aria-controls="mobile-navigation" to the toggle button, and id="mobile-navigation" to the drawer. Consider using the functional state updater:
+
+  onClick={() => setMobileMenuOpen((open) => !open)}
+
+7. Navbar — Active section indicator uses ancestor-relative offsets
+Severity: Medium
+Category: Logic Bug
+Location: src/components/Navbar.jsx, approx. lines 20–34
+Observed behavior: The active navigation pill can select the wrong section or stop updating while scrolling through sections nested inside positioned wrappers.
+Root cause: offsetTop is relative to an offsetParent, while scrollPosition is relative to the document.
+Recommended fix: Compare document-relative positions:
+
+  const rect = el.getBoundingClientRect();
+  const top = rect.top + window.scrollY;
+  const height = rect.height;
+
+  if (scrollPosition >= top && scrollPosition < top + height) {
+    setActiveSection(section);
+    break;
+  }
+
+8. Page anchors — Fixed navbar can cover section headings
+Severity: Medium
+Category: UI-UX
+Location: src/index.css, approx. lines 4–6; section IDs in About, Coursework, TechStack, Projects, and Leadership components
+Observed behavior: Navigating to a section hash can position its heading underneath the fixed navbar.
+Root cause: Smooth scrolling is enabled, but the scroll container has no top offset for the fixed header.
+Recommended fix: Set scroll-padding-top to account for the navbar height:
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+  }
+
+9. BackgroundGlobe — Animation frame and scene resources are not fully cleaned up
+Severity: High
+Category: Performance
+Location: src/components/BackgroundGlobe.jsx, approx. lines 265–266 and 332–338
+Observed behavior: The animation loop can keep rendering after unmount. This can be particularly apparent during React Strict Mode's development effect cleanup/remount and can waste CPU/GPU resources.
+Root cause: requestAnimationFrame's ID is not retained or cancelled. Cleanup removes listeners and disposes the renderer, but does not explicitly dispose scene geometries and materials.
+Recommended fix: Retain the frame ID, cancel it during cleanup, and dispose scene resources before disposing the renderer. Example:
+
+  let animationFrameId;
+  const animate = () => {
+    animationFrameId = requestAnimationFrame(animate);
+    // update scene and render
+  };
+
+  return () => {
+    cancelAnimationFrame(animationFrameId);
+    window.removeEventListener('scroll', handleScroll);
+    window.removeEventListener('resize', handleResize);
+
+    scene.traverse((object) => {
+      object.geometry?.dispose();
+      const materials = Array.isArray(object.material)
+        ? object.material
+        : object.material ? [object.material] : [];
+      materials.forEach((material) => material.dispose());
+    });
+
+    renderer.dispose();
+    if (container.contains(renderer.domElement)) {
+      container.removeChild(renderer.domElement);
+    }
+  };
+
+10. BackgroundGlobe — No graceful path for WebGL context loss
+Severity: Low
+Category: Performance
+Location: src/components/BackgroundGlobe.jsx, renderer setup and cleanup (approx. lines 10–20 and 332–339)
+Observed behavior: If the browser cannot restore the WebGL context, the decorative globe can remain blank with no explicit fallback or recovery path.
+Root cause: No webglcontextlost or webglcontextrestored handling is registered on the renderer canvas.
+Recommended fix: Listen for context loss, stop the animation, and keep the rest of the page usable with a static/CSS fallback. Remove event listeners during cleanup. Resume or rebuild only after verifying renderer and scene resources are valid. Example:
+
+  const canvas = renderer.domElement;
+  const handleContextLost = (event) => {
+    event.preventDefault();
+    cancelAnimationFrame(animationFrameId);
+    canvas.hidden = true;
+  };
+  canvas.addEventListener('webglcontextlost', handleContextLost);
+
+11. BackgroundGlobe — Globe renders continuously when animation may be unnecessary
+Severity: Medium
+Category: Performance
+Location: src/components/BackgroundGlobe.jsx, approx. lines 265–329
+Observed behavior: The animated background continues to consume rendering time while the user reads other sections, including on mobile devices.
+Root cause: The render loop runs continuously regardless of viewport visibility or the user's reduced-motion preference.
+Recommended fix: Pause animation when the page is hidden or the globe is offscreen, and honor prefers-reduced-motion. Keep the passive scroll listener: it only stores a value, so it is not itself a significant throttling problem.
+
+12. Projects — Image fallback can be painted behind its container
+Severity: Low
+Category: UI-UX
+Location: src/components/Projects.jsx, approx. lines 56–71
+Observed behavior: If a project thumbnail fails to load, the intended fallback graphic may be obscured by the preview container background.
+Root cause: The fallback is positioned at -z-10 while the preview container itself has a background.
+Recommended fix: Put the fallback at z-0 and the image above it at z-10; continue hiding the failed image.
+
+13. Projects — Placeholder demo links navigate to #
+Severity: Medium
+Category: Logic Bug
+Location: src/data/portfolioData.js, approx. lines 175 and 199; rendered in src/components/Projects.jsx, approx. lines 124–130
+Observed behavior: "Live Demo" actions for the network simulation and hotel network entries point to #; clicking them navigates to the current page rather than a demo.
+Root cause: Project data uses placeholder hash values, but the component renders them as external links.
+Recommended fix: Supply real demo URLs, or render a disabled/non-link state when a project has no demo. Example:
+
+  {project.demo && project.demo !== '#' ? (
+    <a href={project.demo} target="_blank" rel="noopener noreferrer">Live Demo</a>
+  ) : (
+    <span aria-disabled="true">Demo unavailable</span>
+  )}
+
+14. Projects — Detail modal lacks dialog keyboard and focus behavior
+Severity: Medium
+Category: UI-UX
+Location: src/components/Projects.jsx, approx. lines 144–234
+Observed behavior: The modal can be dismissed with its close button or backdrop, but Escape handling, focus containment/restoration, dialog semantics, and background scroll handling are absent.
+Root cause: The modal is rendered as ordinary div elements and does not establish an accessible modal interaction.
+Recommended fix: Prefer an accessible dialog primitive. At minimum, add role="dialog", aria-modal="true", aria-labelledby pointing to the title, and an accessible label on the close button. Also implement Escape-to-close, focus trapping/restoration, and scroll locking with cleanup; semantics alone do not provide those behaviors.
+
+15. Footer — Contact form reports success without sending a message
+Severity: High
+Category: Logic Bug
+Location: src/components/Footer.jsx, approx. lines 16–23 and 92–140
+Observed behavior: Submitting valid fields displays "Your message has been received," but the form sends no request or email. The visitor receives false confirmation and the message is lost.
+Root cause: handleSubmit only prevents the default event and updates local state.
+Recommended fix: Connect the form to a real API/provider and show success only after a successful response. Add visible loading and error states, and do not show success after a failed request. Example:
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const response = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formState),
+    });
+    if (!response.ok) {
+      throw new Error('Message could not be sent');
+    }
+    setFormSent(true);
+  };
+
+16. Footer — Clipboard failure still reports "Copied!"
+Severity: Medium
+Category: Logic Bug
+Location: src/components/Footer.jsx, approx. lines 10–13
+Observed behavior: The UI reports success immediately even if clipboard access is unavailable or writeText rejects.
+Root cause: The clipboard Promise is not awaited or checked.
+Recommended fix: Await navigator.clipboard.writeText, display success only after it resolves, and render a visible error/fallback when unavailable. Example:
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(personalInfo.email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000);
+    } catch (error) {
+      setCopyError('Could not copy email. Please copy it manually.');
+    }
+  };
+
+17. Footer — Form labels are not associated with their fields
+Severity: Low
+Category: UI-UX
+Location: src/components/Footer.jsx, approx. lines 94–122
+Observed behavior: Clicking a label may not focus its corresponding field, and assistive technology may not reliably announce it.
+Root cause: Labels have no htmlFor, and controls have no matching id.
+Recommended fix: Assign matching identifiers:
+
+  <label htmlFor="contact-name">Your Name</label>
+  <input id="contact-name" ... />
+  <label htmlFor="contact-email">Email Address</label>
+  <input id="contact-email" ... />
+  <label htmlFor="contact-message">Message</label>
+  <textarea id="contact-message" ... />
+
+18. Multiple components — Oxlint reports unused imports
+Severity: Low
+Category: Logic Bug
+Location: src/components/Footer.jsx, approx. line 2; src/components/Hero.jsx, approx. line 3; src/components/Navbar.jsx, approx. line 3
+Observed behavior: npm run lint exits successfully but emits four no-unused-vars warnings.
+Root cause: Unused imports: FaGithub and FaLinkedin in Footer; FaJsSquare in Hero; FaEnvelope in Navbar.
+Recommended fix: Remove those identifiers from the respective react-icons/fa imports.
+
+AUDIT NOTES
+- Mobile menu toggling and link-click auto-close are implemented.
+- No full-screen drawer scroll-lock defect was identified; the current menu is a compact dropdown.
+- The section IDs used by current in-page navigation exist, and the inspected .map() renderings have keys.
+- Public project thumbnails and the About photo have matching files under public/; the Hero avatar source URL is the image-path exception.
+- npm run lint completed with the four unused-import warnings above.
+- No production build or interactive browser/viewport test was run.

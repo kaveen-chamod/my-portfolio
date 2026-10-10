@@ -14,7 +14,7 @@ export const personalInfo = {
   email: "kaveenchamod344@gmail.com",
   linkedin: "https://www.linkedin.com/in/kaveen-chamod",
   github: "https://github.com/kaveen-chamod",
-  resume: "https://drive.google.com/file/d/14e4uFgyRwbT4NB-LthwcyVb0yyxWuH_f/view?usp=drive_open",
+  resume: "https://drive.google.com/file/d/1unolnwIq_f0AMIbQTZTUVIK4Vf8jl8eL/view?usp=drive_link",
 };
 
 export const aboutData = {
@@ -198,7 +198,24 @@ export const projectsData = [
     github: "https://github.com/kaveen-chamod",
     demo: "#",
     featured: true
-  }
+  },
+  {
+  id: "network-compliance-auditor",
+  title: "Automated Network Compliance Auditor",
+  subtitle: "NetDevOps & Security Automation",
+  tech: ["Python", "Cisco IOS", "Cisco Packet Tracer", "openpyxl", "pandas", "Webhooks"],
+  description: "Automated network configuration auditing and compliance engine that ingests Cisco IOS running-configs, audits security baselines via regex, and generates executive-grade reports with real-time alerting.",
+  features: [
+    "Simulated enterprise multi-router architecture modeled and validated in Cisco Packet Tracer",
+    "Automated regex compliance engine checking SSH v2, password encryption, banners, and VTY access controls",
+    "Executive Excel audit reporting with dynamic color-coded conditional styling (Green/Red) via openpyxl",
+    "Instant zero-lag security alerting dispatched via Discord Webhook rich embeds on policy violations"
+  ],
+  image: "/project-network-auditor.png",
+  github: "https://github.com/kaveen-chamod/network-compliance-auditor.git",
+  demo: "https://github.com/kaveen-chamod/network-compliance-auditor.git",
+  featured: true
+}
 ];
 
 export const leadershipData = [

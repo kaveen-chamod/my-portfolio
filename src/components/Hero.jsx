@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaGithub, FaLinkedin, FaEnvelope, FaFileDownload, FaArrowRight, FaCode, FaReact, FaTerminal, FaNetworkWired } from 'react-icons/fa';
-import heroAvatar from '../assets/hero-avatar.png';
 import { personalInfo } from '../data/portfolioData';
+
 
 export default function Hero() {
   const [avatarFailed, setAvatarFailed] = useState(false);
@@ -149,8 +149,8 @@ export default function Hero() {
                     </div>
                   ) : (
                     <img
-                      src={heroAvatar}
-                      alt="Kaveen Chamod Avatar"
+                      src="about-profile.jpg"
+                      alt="Kaveen Chamod"
                       className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                       onError={() => setAvatarFailed(true)}
                     />

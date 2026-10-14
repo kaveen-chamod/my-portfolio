@@ -14,7 +14,7 @@ export const personalInfo = {
   email: "kaveenchamod344@gmail.com",
   linkedin: "https://www.linkedin.com/in/kaveen-chamod",
   github: "https://github.com/kaveen-chamod",
-  resume: "https://drive.google.com/file/d/1unolnwIq_f0AMIbQTZTUVIK4Vf8jl8eL/view?usp=drive_link",
+  resume: "https://drive.google.com/drive/folders/1Hmxe_S9M9aOP1RsKBAwXEq-g5KcIxPIo?usp=sharing",
 };
 
 export const aboutData = {
